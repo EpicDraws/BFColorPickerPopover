@@ -32,11 +32,12 @@
 
 #define kBFColorPickerPopoverMinimumDragDistance 50.0f
 
-@interface BFColorPickerPopover : NSPopover
+@interface BFColorPickerPopover : NSPopover<NSPopoverDelegate>
 
 @property (nonatomic) id target;
 @property (nonatomic) SEL action;
 @property (nonatomic, weak) NSColor *color;
+@property (nonatomic) NSObject* onCloseDelegate;
 
 + (BFColorPickerPopover *)sharedPopover;
 

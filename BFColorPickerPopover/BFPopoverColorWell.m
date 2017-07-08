@@ -46,8 +46,8 @@
 @implementation BFPopoverColorWell
 
 - (void)setup {
-	self.preferredEdgeForPopover = NSMaxXEdge;
-	self.useColorPanelIfAvailable = YES;
+    self.preferredEdgeForPopover = NSMaxXEdge;
+    self.useColorPanelIfAvailable = YES;
 }
 
 - (id)initWithCoder:(NSCoder *)coder
@@ -69,58 +69,52 @@
 }
 
 - (void)activateWithPopover {
-	if (self.isActive) return;
-	
-	// Setup and show the popover.
-	self.popover = [BFColorPickerPopover sharedPopover];
-    self.popover.delegate = self;
-	self.popover.color = self.color;
-	[self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
-	self.popover.colorWell = self;
-	
-	// Disable the shared color panel, while the NSColorWell implementation is executed.
-	// This is done by overriding the orderFront: method of NSColorPanel in a category.
-	[[NSColorPanel sharedColorPanel] disablePanel];
-	[super activate:YES];
-	[[NSColorPanel sharedColorPanel] enablePanel];
-	
-	self.isActive = YES;
+    if (self.isActive) return;
+    
+    // Setup and show the popover.
+    self.popover = [BFColorPickerPopover sharedPopover];
+    self.popover.color = self.color;
+    [self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
+    self.popover.colorWell = self;
+    self.popover.onCloseDelegate = _onCloseDel;
+    
+    // Disable the shared color panel, while the NSColorWell implementation is executed.
+    // This is done by overriding the orderFront: method of NSColorPanel in a category.
+    [[NSColorPanel sharedColorPanel] disablePanel];
+    [super activate:YES];
+    [[NSColorPanel sharedColorPanel] enablePanel];
+    
+    self.isActive = YES;
 }
 
 - (void)activate:(BOOL)exclusive {
-	if (self.isActive) return;
-	
-	if (self.useColorPanelIfAvailable && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
-		[super activate:exclusive];
-		self.isActive = YES;
-	} else {
-		[self activateWithPopover];
-	}
+    if (self.isActive) return;
+    
+    if (self.useColorPanelIfAvailable && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
+        [super activate:exclusive];
+        self.isActive = YES;
+    } else {
+        [self activateWithPopover];
+    }
 }
 
 - (void)deactivate {
-	if (!self.isActive) return;
-	[super deactivate];
-	self.popover.colorWell = nil;
-    self.popover.delegate = nil;
-	self.popover = nil;
-	self.isActive = NO;
+    if (!self.isActive) return;
+    [super deactivate];
+    self.popover.colorWell = nil;
+    self.popover = nil;
+    self.isActive = NO;
 }
 
 // Force using a popover (even if useColorPanelIfAvailable = YES), when the user double clicks the well.
 - (void)mouseDown:(NSEvent *)theEvent {
-	if([theEvent clickCount] == 2 && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
-		[self deactivate];
-		[self activateWithPopover];
-	} else {
-		[super mouseDown:theEvent];
-	}
-	
-}
-
-- (void)popoverDidClose:(NSNotification *)notification
-{
-    [self deactivate];
+    if([theEvent clickCount] == 2 && [NSColorPanel sharedColorPanelExists] && [[NSColorPanel sharedColorPanel] isVisible]) {
+        [self deactivate];
+        [self activateWithPopover];
+    } else {
+        [super mouseDown:theEvent];
+    }
+    
 }
 
 @end

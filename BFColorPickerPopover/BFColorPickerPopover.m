@@ -44,28 +44,28 @@
 
 
 @implementation BFColorPickerPopover {
-	NSColor *_color;
+    NSColor *_color;
 }
 
 @synthesize observingColor = _observingColor;
 
 - (void)setObservingColor:(BOOL)observingColor {
-	if (_observingColor == observingColor) {
-		return;
-	}
-
-	if (!self.colorPanel) {
-		observingColor = NO;
-	}
-
-	_observingColor = observingColor;
-
-	void *context = (__bridge void *)self;
-	if (_observingColor) {
-		[self.colorPanel addObserver:self forKeyPath:@"color" options:NSKeyValueObservingOptionNew context:context];
-	} else {
-		[self.colorPanel removeObserver:self forKeyPath:@"color" context:context];
-	}
+    if (_observingColor == observingColor) {
+        return;
+    }
+    
+    if (!self.colorPanel) {
+        observingColor = NO;
+    }
+    
+    _observingColor = observingColor;
+    
+    void *context = (__bridge void *)self;
+    if (_observingColor) {
+        [self.colorPanel addObserver:self forKeyPath:@"color" options:NSKeyValueObservingOptionNew context:context];
+    } else {
+        [self.colorPanel removeObserver:self forKeyPath:@"color" context:context];
+    }
 }
 
 #pragma mark -
@@ -77,6 +77,7 @@
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         sharedPopover = [[BFColorPickerPopover alloc] init];
+        sharedPopover.delegate = sharedPopover;
     });
     return sharedPopover;
 }
@@ -85,9 +86,9 @@
 {
     self = [super init];
     if (self) {
-		self.behavior = NSPopoverBehaviorSemitransient;
-		_color = [NSColor whiteColor];
-	}
+        self.behavior = NSPopoverBehaviorSemitransient;
+        _color = [NSColor whiteColor];
+    }
     return self;
 }
 
@@ -95,91 +96,97 @@
 #pragma mark Getters & Setters
 
 - (NSColorPanel *)colorPanel {
-	return ((BFColorPickerViewController *)self.contentViewController).colorPanel;
+    return ((BFColorPickerViewController *)self.contentViewController).colorPanel;
 }
 
 - (NSColor *)color {
-	return self.colorPanel.color;
+    return self.colorPanel.color;
 }
 
 - (void)setColor:(NSColor *)color {
-	_color = color;
-	if (self.isShown) {
-		self.colorPanel.color = color;
-	}
+    _color = color;
+    if (self.isShown) {
+        self.colorPanel.color = color;
+    }
 }
 
 #pragma mark -
 #pragma mark Popover Lifecycle
 
 - (void)showRelativeToRect:(NSRect)positioningRect ofView:(NSView *)positioningView preferredEdge:(NSRectEdge)preferredEdge {
-	
-	// Close the popover without an animation if it's already on screen.
-	if (self.isShown) {
-		id targetBackup = self.target;
-		SEL actionBackup = self.action;
-		BOOL animatesBackup = self.animates;
-		self.animates = NO;
-		[self close];
-		self.animates = animatesBackup;
-		self.target = targetBackup;
-		self.action = actionBackup;
-	}
-	
-	self.contentViewController = [[BFColorPickerViewController alloc] init];
-	[super showRelativeToRect:positioningRect ofView:positioningView preferredEdge:preferredEdge];
-	
-	self.colorPanel.color = _color;
-	self.observingColor = YES;
+    
+    // Close the popover without an animation if it's already on screen.
+    if (self.isShown) {
+        id targetBackup = self.target;
+        SEL actionBackup = self.action;
+        BOOL animatesBackup = self.animates;
+        self.animates = NO;
+        [self close];
+        self.animates = animatesBackup;
+        self.target = targetBackup;
+        self.action = actionBackup;
+    }
+    
+    self.contentViewController = [[BFColorPickerViewController alloc] init];
+    [super showRelativeToRect:positioningRect ofView:positioningView preferredEdge:preferredEdge];
+    
+    self.colorPanel.color = _color;
+    self.observingColor = YES;
 }
 
 // On pressing Esc, close the popover.
 - (void)cancelOperation:(id)sender {
-	[self close];
+    [self close];
 }
 
 - (void)removeTargetAndAction {
-	self.target = nil;
-	self.action = nil;
+    self.target = nil;
+    self.action = nil;
 }
 
 - (void)deactivateColorWell {
-	[self.colorWell deactivate];
-	self.colorWell = nil;
+    [self.colorWell deactivate];
+    self.colorWell = nil;
 }
 
 - (void)closeAndDeactivateColorWell:(BOOL)deactivate removeTarget:(BOOL)removeTarget removeObserver:(BOOL)removeObserver {
-	
-	if (removeTarget) {
-		[self removeTargetAndAction];
-	}
-	if (removeObserver) {
-		self.observingColor = NO;
-	}
-	
-	// For some strange reason I couldn't figure out, the panel changes it's color when closed.
-	// To fix this, I reset the color after it's closed.
-	NSColor *backupColor = self.colorPanel.color;
-	[super close];
-	self.colorPanel.color = backupColor;
-	
-	if (deactivate) {
-		[self deactivateColorWell];
-	}
+    if (removeObserver) {
+        self.observingColor = NO;
+    }
+    
+    // For some strange reason I couldn't figure out, the panel changes it's color when closed.
+    // To fix this, I reset the color after it's closed.
+    NSColor *backupColor = self.colorPanel.color;
+    [super close];
+    self.colorPanel.color = backupColor;
+    
+    if (removeTarget) {
+        [self removeTargetAndAction];
+    }
+    
+    if (deactivate) {
+        [self deactivateColorWell];
+    }
 }
 
 - (void)close {
-	[self closeAndDeactivateColorWell:YES removeTarget:YES removeObserver:YES];
+    [self closeAndDeactivateColorWell:YES removeTarget:YES removeObserver:YES];
 }
 
 - (BOOL)_delegatePopoverShouldClose:(id)sender {
-	if ([super _delegatePopoverShouldClose:sender]) {
-		[self removeTargetAndAction];
-		self.observingColor = NO;
-		[self deactivateColorWell];
-		return YES;
-	}
-	return NO;
+    if ([super _delegatePopoverShouldClose:sender]) {
+        [self removeTargetAndAction];
+        self.observingColor = NO;
+        [self deactivateColorWell];
+        return YES;
+    }
+    return NO;
+}
+
+-(void)popoverWillClose:(NSNotification *)notification {
+    if(_onCloseDelegate) {
+        [_onCloseDelegate performSelector:@selector(popoverClosed)];
+    }
 }
 
 #pragma mark -
@@ -187,18 +194,18 @@
 
 // Notify the target when the color changes.
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-	if (object == self.colorPanel && [keyPath isEqualToString:@"color"] && context == (__bridge void *)self) {
-		_color = self.colorPanel.color;
-		if (self.target && self.action && [self.target respondsToSelector:self.action]) {
-      
+    if (object == self.colorPanel && [keyPath isEqualToString:@"color"] && context == (__bridge void *)self) {
+        _color = self.colorPanel.color;
+        if (self.target && self.action && [self.target respondsToSelector:self.action]) {
+            
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
-
-			[self.target performSelector:self.action withObject:self];
-      
+            
+            [self.target performSelector:self.action withObject:self];
+            
 #pragma clang diagnostic pop
-		}
-	}
+        }
+    }
 }
 
 @end
