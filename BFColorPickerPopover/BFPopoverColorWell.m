@@ -73,6 +73,11 @@
     
     // Setup and show the popover.
     self.popover = [BFColorPickerPopover sharedPopover];
+    
+    if(![[NSUserDefaults standardUserDefaults] boolForKey:@"ever_changed_background"]) {
+        self.color = [self.color colorWithAlphaComponent:1.0f];
+    }
+    
     self.popover.color = self.color;
     self.popover.colorWell = self;
     [self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
