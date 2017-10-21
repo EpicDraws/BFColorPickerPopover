@@ -74,8 +74,8 @@
     // Setup and show the popover.
     self.popover = [BFColorPickerPopover sharedPopover];
     self.popover.color = self.color;
-    [self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
     self.popover.colorWell = self;
+    [self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
     self.popover.onCloseDelegate = _onCloseDel;
     
     // Disable the shared color panel, while the NSColorWell implementation is executed.
