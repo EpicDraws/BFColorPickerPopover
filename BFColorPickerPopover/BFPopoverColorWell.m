@@ -78,7 +78,7 @@
         self.color = [self.color colorWithAlphaComponent:1.0f];
     }
     
-    self.popover.color = self.color;
+//    self.popover.color = self.color;
     self.popover.colorWell = self;
     [self.popover showRelativeToRect:self.frame ofView:self.superview preferredEdge:self.preferredEdgeForPopover];
     self.popover.onCloseDelegate = _onCloseDel;
